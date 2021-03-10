@@ -1,0 +1,12 @@
+{
+  "name": "CarControl",
+  "displayName": "CarControl",
+  "expo": {
+    "name": "CarControl",
+    "slug": "CarControl",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}
