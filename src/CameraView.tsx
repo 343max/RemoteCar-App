@@ -1,8 +1,12 @@
 import React, { FC, useState } from "react"
-import { Image } from "react-native"
+import { Image, ImageStyle, StyleProp } from "react-native"
 import { useSocket } from "./useSocket"
 
-export const CameraView: FC = () => {
+type CameraViewProps = {
+  style?: StyleProp<ImageStyle>
+}
+
+export const CameraView: FC<CameraViewProps> = ({ style }) => {
   const [imageData, setImageData] = useState<string | undefined>()
 
   useSocket((socket) => {
@@ -17,7 +21,7 @@ export const CameraView: FC = () => {
     return (
       <Image
         source={{ uri: "data:image/jpeg;base64," + imageData }}
-        style={{ width: 640 / 2, height: 480 / 2 }}
+        style={style}
       />
     )
   }
