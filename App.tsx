@@ -1,19 +1,25 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { lockAsync, OrientationLock } from "expo-screen-orientation"
+import React, { useEffect } from "react"
+import { StyleSheet, View } from "react-native"
+import { CameraView } from "./src/CameraView"
 
 export default function App() {
+  useEffect(() => {
+    lockAsync(OrientationLock.LANDSCAPE)
+  }, [])
+
   return (
     <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
+      <CameraView />
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
   },
-});
+})
