@@ -14,24 +14,26 @@ const circleStyle = (
   borderRadius: radius,
 })
 
-type JoystickState = null | { rad: number; power: number }
+type JoystickState = null | number
 
 type JoystickViewProps = {
   style?: StyleProp<ViewStyle>
   onValueChanged: (value: JoystickState) => void
   joystickRadius: number
-  trackingRadius: number
+  trackingLength: number
 }
 
-export const JoystickView: FC<JoystickViewProps> = ({
+const clamp = (min: number, value: number, max: number) =>
+  Math.min(Math.max(value, min), max)
+
+export const HorizontalJoystickView: FC<JoystickViewProps> = ({
   style,
   onValueChanged,
   joystickRadius,
-  trackingRadius,
+  trackingLength,
   children,
 }) => {
   const translateX = useRef(new Animated.Value(0)).current
-  const translateY = useRef(new Animated.Value(0)).current
   const opacity = useRef(new Animated.Value(1)).current
 
   const [panning, setPanning] = useState(false)
@@ -48,20 +50,20 @@ export const JoystickView: FC<JoystickViewProps> = ({
     }
   }, [panning])
 
-  const [offset, setOffset] = useState({ x: 0, y: 0 })
+  const [offset, setOffset] = useState(0)
 
   const onGestureEvent: Exclude<
     PanGestureHandlerProperties["onGestureEvent"],
     undefined
   > = ({ nativeEvent }) => {
     if (nativeEvent.state === State.ACTIVE) {
-      const x = nativeEvent.absoluteX - offset.x
-      const y = nativeEvent.absoluteY - offset.y
-      const rad = Math.atan2(y, x)
-      const length = Math.min(Math.sqrt(x * x + y * y), trackingRadius)
-      translateX.setValue(Math.cos(rad) * length)
-      translateY.setValue(Math.sin(rad) * length)
-      onValueChanged({ rad, power: length / trackingRadius })
+      const x = clamp(
+        -trackingLength / 2,
+        nativeEvent.absoluteX - offset,
+        trackingLength / 2
+      )
+      translateX.setValue(x)
+      onValueChanged((x / trackingLength) * 2)
     }
   }
 
@@ -71,21 +73,19 @@ export const JoystickView: FC<JoystickViewProps> = ({
   > = ({ nativeEvent }) => {
     if (nativeEvent.state === State.BEGAN) {
       setPanning(true)
-      setOffset({ x: nativeEvent.absoluteX, y: nativeEvent.absoluteY })
-      onValueChanged({ rad: 0, power: 0 })
+      setOffset(nativeEvent.absoluteX)
+      onValueChanged(0)
     } else if (
       nativeEvent.state === State.END ||
       nativeEvent.state === State.CANCELLED
     ) {
       setPanning(false)
-      ;[translateX, translateY].forEach((value) => {
-        Animated.timing(value, {
-          duration: 200,
-          toValue: 0,
-          easing: Easing.bounce,
-          useNativeDriver: true,
-        }).start()
-      })
+      Animated.timing(translateX, {
+        duration: 200,
+        toValue: 0,
+        easing: Easing.bounce,
+        useNativeDriver: true,
+      }).start()
       onValueChanged(null)
     }
   }
@@ -99,13 +99,14 @@ export const JoystickView: FC<JoystickViewProps> = ({
         style={[
           style,
           {
-            ...circleStyle(trackingRadius),
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
+            height: 16,
+            borderRadius: 8,
+            width: trackingLength,
             backgroundColor: "rgba(0,0,0,0.2)",
             borderColor: "rgba(255,255,255,0.3)",
             borderWidth: 1,
+            justifyContent: "center",
+            alignItems: "center",
           },
         ]}
       >
@@ -114,7 +115,7 @@ export const JoystickView: FC<JoystickViewProps> = ({
             ...circleStyle(joystickRadius),
             backgroundColor: "#ff8800",
             opacity,
-            transform: [{ translateX }, { translateY }],
+            transform: [{ translateX }],
             justifyContent: "center",
             alignItems: "center",
           }}
