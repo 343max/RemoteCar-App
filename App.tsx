@@ -5,7 +5,8 @@ import { CameraView } from "./src/CameraView"
 import { JoystickView } from "./src/JoystickView"
 import { AntDesign } from "@expo/vector-icons"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
-import { HorizontalJoystickView } from "./src/HorizontalJoystickView"
+import { Ionicons } from "@expo/vector-icons"
+import { DirectionalJoystickView } from "./src/DirectionalJoystickView"
 
 export default function App() {
   useEffect(() => {
@@ -32,7 +33,8 @@ export default function App() {
         >
           <AntDesign name="videocamera" size={32} color="white" />
         </JoystickView>
-        <HorizontalJoystickView
+        <DirectionalJoystickView
+          direction="horizontal"
           onValueChanged={console.log}
           joystickRadius={40}
           trackingLength={180}
@@ -43,7 +45,20 @@ export default function App() {
           }}
         >
           <MaterialCommunityIcons name="steering" size={32} color="white" />
-        </HorizontalJoystickView>
+        </DirectionalJoystickView>
+        <DirectionalJoystickView
+          direction="vertical"
+          onValueChanged={console.log}
+          joystickRadius={40}
+          trackingLength={50}
+          style={{
+            position: "absolute",
+            right: 80,
+            bottom: 80,
+          }}
+        >
+          <Ionicons name="ios-speedometer-outline" size={32} color="white" />
+        </DirectionalJoystickView>
       </View>
     </>
   )

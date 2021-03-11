@@ -17,6 +17,7 @@ const circleStyle = (
 type JoystickState = null | number
 
 type JoystickViewProps = {
+  direction: "horizontal" | "vertical"
   style?: StyleProp<ViewStyle>
   onValueChanged: (value: JoystickState) => void
   joystickRadius: number
@@ -26,14 +27,18 @@ type JoystickViewProps = {
 const clamp = (min: number, value: number, max: number) =>
   Math.min(Math.max(value, min), max)
 
-export const HorizontalJoystickView: FC<JoystickViewProps> = ({
+export const DirectionalJoystickView: FC<JoystickViewProps> = ({
+  direction,
   style,
   onValueChanged,
   joystickRadius,
   trackingLength,
   children,
 }) => {
-  const translateX = useRef(new Animated.Value(0)).current
+  const d = <T,>(horizontal: T, vertical: T): T =>
+    direction === "horizontal" ? horizontal : vertical
+
+  const translate = useRef(new Animated.Value(0)).current
   const opacity = useRef(new Animated.Value(1)).current
 
   const [panning, setPanning] = useState(false)
@@ -57,13 +62,13 @@ export const HorizontalJoystickView: FC<JoystickViewProps> = ({
     undefined
   > = ({ nativeEvent }) => {
     if (nativeEvent.state === State.ACTIVE) {
-      const x = clamp(
+      const diff = clamp(
         -trackingLength / 2,
-        nativeEvent.absoluteX - offset,
+        d(nativeEvent.absoluteX, nativeEvent.absoluteY) - offset,
         trackingLength / 2
       )
-      translateX.setValue(x)
-      onValueChanged((x / trackingLength) * 2)
+      translate.setValue(diff)
+      onValueChanged((diff / trackingLength) * 2)
     }
   }
 
@@ -73,14 +78,14 @@ export const HorizontalJoystickView: FC<JoystickViewProps> = ({
   > = ({ nativeEvent }) => {
     if (nativeEvent.state === State.BEGAN) {
       setPanning(true)
-      setOffset(nativeEvent.absoluteX)
+      setOffset(d(nativeEvent.absoluteX, nativeEvent.absoluteY))
       onValueChanged(0)
     } else if (
       nativeEvent.state === State.END ||
       nativeEvent.state === State.CANCELLED
     ) {
       setPanning(false)
-      Animated.timing(translateX, {
+      Animated.timing(translate, {
         duration: 200,
         toValue: 0,
         easing: Easing.bounce,
@@ -89,6 +94,8 @@ export const HorizontalJoystickView: FC<JoystickViewProps> = ({
       onValueChanged(null)
     }
   }
+
+  const thickness = 16
 
   return (
     <PanGestureHandler
@@ -99,9 +106,9 @@ export const HorizontalJoystickView: FC<JoystickViewProps> = ({
         style={[
           style,
           {
-            height: 16,
+            height: d(thickness, trackingLength),
             borderRadius: 8,
-            width: trackingLength,
+            width: d(trackingLength, thickness),
             backgroundColor: "rgba(0,0,0,0.2)",
             borderColor: "rgba(255,255,255,0.3)",
             borderWidth: 1,
@@ -115,7 +122,10 @@ export const HorizontalJoystickView: FC<JoystickViewProps> = ({
             ...circleStyle(joystickRadius),
             backgroundColor: "#ff8800",
             opacity,
-            transform: [{ translateX }],
+            transform: d(
+              [{ translateX: translate }],
+              [{ translateY: translate }]
+            ),
             justifyContent: "center",
             alignItems: "center",
           }}
