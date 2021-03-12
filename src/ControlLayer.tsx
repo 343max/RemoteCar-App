@@ -15,6 +15,27 @@ type ControlLayerProps = {
   style?: ViewStyle
 }
 
+const calculateMotorSpeed = (
+  steering: number,
+  speed: number
+): [left: number, right: number] => {
+  if (speed === 0) {
+    return [steering, -steering]
+  } else if (speed > 0) {
+    if (steering > 0) {
+      return [speed - steering, speed]
+    } else {
+      return [speed, speed + steering]
+    }
+  } else {
+    if (steering > 0) {
+      return [speed, speed + steering]
+    } else {
+      return [speed - steering, speed]
+    }
+  }
+}
+
 export const ControlLayer: FC<ControlLayerProps> = ({ style }) => {
   const [cameraPanning, setCameraPanning] = useState<JoystickState>(null)
   const [
@@ -28,12 +49,11 @@ export const ControlLayer: FC<ControlLayerProps> = ({ style }) => {
   }
 
   const [start, clear] = useInterval(() => {
-    if (drivingDirection !== null) {
-      const steeringDirection = drivingDirection ?? 0
-      sendDriveCommand(-steeringDirection, steeringDirection)
-    } else {
-      sendDriveCommand(throttling ?? 0, throttling ?? 0)
-    }
+    const [left, right] = calculateMotorSpeed(
+      drivingDirection ?? 0,
+      throttling ?? 0
+    )
+    sendDriveCommand(left, right)
   }, 10)
 
   const socket = useSocket(8080, (socket) => {
@@ -47,10 +67,6 @@ export const ControlLayer: FC<ControlLayerProps> = ({ style }) => {
       clear()
     })
   })
-
-  useEffect(() => {
-    console.log({ cameraPanning, drivingDirection, throttling })
-  }, [cameraPanning, drivingDirection, throttling])
 
   return (
     <View style={style}>
