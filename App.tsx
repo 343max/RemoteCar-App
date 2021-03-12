@@ -1,19 +1,31 @@
 import { lockAsync, OrientationLock } from "expo-screen-orientation"
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { StyleSheet, View } from "react-native"
 import { CameraView } from "./src/CameraView"
-import { JoystickView } from "./src/JoystickView"
+import { JoystickState, Joystick } from "./src/Joystick"
 import { AntDesign } from "@expo/vector-icons"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
 import { Ionicons } from "@expo/vector-icons"
-import { DirectionalJoystickView } from "./src/DirectionalJoystickView"
+import {
+  DirectionalJoystickState,
+  DirectionalJoystick,
+} from "./src/DirectionalJoystick"
 
 export default function App() {
+  const [cameraPanning, setCameraPanning] = useState<JoystickState>(null)
+  const [
+    drivingDirection,
+    setDrivingDirection,
+  ] = useState<DirectionalJoystickState>(null)
+  const [throttling, setThrottling] = useState<DirectionalJoystickState>(null)
+
   useEffect(() => {
     lockAsync(OrientationLock.LANDSCAPE)
   }, [])
 
-  const joystickPadding = 60
+  useEffect(() => {
+    console.log({ cameraPanning, drivingDirection, throttling })
+  }, [cameraPanning, drivingDirection, throttling])
 
   return (
     <>
@@ -21,8 +33,8 @@ export default function App() {
         <CameraView style={{ height: "100%", aspectRatio: 4 / 3 }} />
       </View>
       <View style={styles.joystickContainer}>
-        <JoystickView
-          onValueChanged={console.log}
+        <Joystick
+          onValueChanged={setCameraPanning}
           style={{
             position: "absolute",
             top: 60,
@@ -32,33 +44,33 @@ export default function App() {
           trackingRadius={60}
         >
           <AntDesign name="videocamera" size={32} color="white" />
-        </JoystickView>
-        <DirectionalJoystickView
+        </Joystick>
+        <DirectionalJoystick
           direction="horizontal"
-          onValueChanged={console.log}
+          onValueChanged={setDrivingDirection}
           joystickRadius={40}
           trackingLength={180}
           style={{
             position: "absolute",
-            left: 80,
-            bottom: 80,
+            left: 120,
+            bottom: 125,
           }}
         >
           <MaterialCommunityIcons name="steering" size={32} color="white" />
-        </DirectionalJoystickView>
-        <DirectionalJoystickView
+        </DirectionalJoystick>
+        <DirectionalJoystick
           direction="vertical"
-          onValueChanged={console.log}
+          onValueChanged={setThrottling}
           joystickRadius={40}
           trackingLength={50}
           style={{
             position: "absolute",
-            right: 80,
-            bottom: 80,
+            right: 240,
+            bottom: 120,
           }}
         >
           <Ionicons name="ios-speedometer-outline" size={32} color="white" />
-        </DirectionalJoystickView>
+        </DirectionalJoystick>
       </View>
     </>
   )

@@ -14,31 +14,24 @@ const circleStyle = (
   borderRadius: radius,
 })
 
-type JoystickState = null | number
+export type JoystickState = null | { rad: number; power: number }
 
 type JoystickViewProps = {
-  direction: "horizontal" | "vertical"
   style?: StyleProp<ViewStyle>
   onValueChanged: (value: JoystickState) => void
   joystickRadius: number
-  trackingLength: number
+  trackingRadius: number
 }
 
-const clamp = (min: number, value: number, max: number) =>
-  Math.min(Math.max(value, min), max)
-
-export const DirectionalJoystickView: FC<JoystickViewProps> = ({
-  direction,
+export const Joystick: FC<JoystickViewProps> = ({
   style,
   onValueChanged,
   joystickRadius,
-  trackingLength,
+  trackingRadius,
   children,
 }) => {
-  const d = <T,>(horizontal: T, vertical: T): T =>
-    direction === "horizontal" ? horizontal : vertical
-
-  const translate = useRef(new Animated.Value(0)).current
+  const translateX = useRef(new Animated.Value(0)).current
+  const translateY = useRef(new Animated.Value(0)).current
   const opacity = useRef(new Animated.Value(1)).current
 
   const [panning, setPanning] = useState(false)
@@ -55,20 +48,20 @@ export const DirectionalJoystickView: FC<JoystickViewProps> = ({
     }
   }, [panning])
 
-  const [offset, setOffset] = useState(0)
+  const [offset, setOffset] = useState({ x: 0, y: 0 })
 
   const onGestureEvent: Exclude<
     PanGestureHandlerProperties["onGestureEvent"],
     undefined
   > = ({ nativeEvent }) => {
     if (nativeEvent.state === State.ACTIVE) {
-      const diff = clamp(
-        -trackingLength / 2,
-        d(nativeEvent.absoluteX, nativeEvent.absoluteY) - offset,
-        trackingLength / 2
-      )
-      translate.setValue(diff)
-      onValueChanged((diff / trackingLength) * 2)
+      const x = nativeEvent.absoluteX - offset.x
+      const y = nativeEvent.absoluteY - offset.y
+      const rad = Math.atan2(y, x)
+      const length = Math.min(Math.sqrt(x * x + y * y), trackingRadius)
+      translateX.setValue(Math.cos(rad) * length)
+      translateY.setValue(Math.sin(rad) * length)
+      onValueChanged({ rad, power: length / trackingRadius })
     }
   }
 
@@ -78,24 +71,24 @@ export const DirectionalJoystickView: FC<JoystickViewProps> = ({
   > = ({ nativeEvent }) => {
     if (nativeEvent.state === State.BEGAN) {
       setPanning(true)
-      setOffset(d(nativeEvent.absoluteX, nativeEvent.absoluteY))
-      onValueChanged(0)
+      setOffset({ x: nativeEvent.absoluteX, y: nativeEvent.absoluteY })
+      onValueChanged({ rad: 0, power: 0 })
     } else if (
       nativeEvent.state === State.END ||
       nativeEvent.state === State.CANCELLED
     ) {
       setPanning(false)
-      Animated.timing(translate, {
-        duration: 200,
-        toValue: 0,
-        easing: Easing.bounce,
-        useNativeDriver: true,
-      }).start()
+      ;[translateX, translateY].forEach((value) => {
+        Animated.timing(value, {
+          duration: 200,
+          toValue: 0,
+          easing: Easing.bounce,
+          useNativeDriver: true,
+        }).start()
+      })
       onValueChanged(null)
     }
   }
-
-  const thickness = 16
 
   return (
     <PanGestureHandler
@@ -106,14 +99,13 @@ export const DirectionalJoystickView: FC<JoystickViewProps> = ({
         style={[
           style,
           {
-            height: d(thickness, trackingLength),
-            borderRadius: 8,
-            width: d(trackingLength, thickness),
+            ...circleStyle(trackingRadius),
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
             backgroundColor: "rgba(0,0,0,0.2)",
             borderColor: "rgba(255,255,255,0.3)",
             borderWidth: 1,
-            justifyContent: "center",
-            alignItems: "center",
           },
         ]}
       >
@@ -122,10 +114,7 @@ export const DirectionalJoystickView: FC<JoystickViewProps> = ({
             ...circleStyle(joystickRadius),
             backgroundColor: "#ff8800",
             opacity,
-            transform: d(
-              [{ translateX: translate }],
-              [{ translateY: translate }]
-            ),
+            transform: [{ translateX }, { translateY }],
             justifyContent: "center",
             alignItems: "center",
           }}
