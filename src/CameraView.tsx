@@ -9,13 +9,13 @@ type CameraViewProps = {
 export const CameraView: FC<CameraViewProps> = ({ style }) => {
   const [imageData, setImageData] = useState<string | undefined>()
 
-  const socket = useSocket(12000)
+  const { socket, socketCreated } = useSocket(12000)
 
-  useEffect(() => {
+  if (socketCreated) {
     socket.on("image", (data) => {
       setImageData(data)
     })
-  }, [socket])
+  }
 
   if (imageData === undefined) {
     return <></>

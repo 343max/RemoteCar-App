@@ -2,9 +2,11 @@ import { useEffect, useState } from "react"
 import { io } from "socket.io-client"
 
 export const useSocket = (port: number) => {
-  const [socket, _] = useState(
-    io(`http://carpi.local:${port}/`, { autoConnect: false })
-  )
+  let socketCreated: boolean = false
+  const [socket, _] = useState(() => {
+    socketCreated = true
+    return io(`http://carpi.local:${port}/`, { autoConnect: false })
+  })
 
   useEffect(() => {
     socket.connect()
@@ -14,5 +16,5 @@ export const useSocket = (port: number) => {
     }
   }, [])
 
-  return socket
+  return { socket, socketCreated }
 }

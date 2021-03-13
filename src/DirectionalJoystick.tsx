@@ -41,6 +41,15 @@ export const DirectionalJoystick: FC<JoystickViewProps> = ({
 
   const [panning, setPanning] = useState(false)
 
+  const [value, setValue] = useState<DirectionalJoystickState>(null)
+  const onValueChangeIfNeeded = (newValue: DirectionalJoystickState) => {
+    if (value === newValue) {
+      return
+    }
+    setValue(newValue)
+    onValueChanged(newValue)
+  }
+
   useEffect(() => {
     if (panning) {
       opacity.setValue(0.8)
@@ -66,7 +75,7 @@ export const DirectionalJoystick: FC<JoystickViewProps> = ({
         trackingLength / 2
       )
       translate.setValue(diff)
-      onValueChanged((diff / trackingLength) * 2 * d(1, -1))
+      onValueChangeIfNeeded((diff / trackingLength) * 2 * d(1, -1))
     }
   }
 
@@ -77,7 +86,7 @@ export const DirectionalJoystick: FC<JoystickViewProps> = ({
     if (nativeEvent.state === State.BEGAN) {
       setPanning(true)
       setOffset(d(nativeEvent.absoluteX, nativeEvent.absoluteY))
-      onValueChanged(0)
+      onValueChangeIfNeeded(0)
     } else if (
       nativeEvent.state === State.END ||
       nativeEvent.state === State.CANCELLED
@@ -89,7 +98,7 @@ export const DirectionalJoystick: FC<JoystickViewProps> = ({
         easing: Easing.bounce,
         useNativeDriver: true,
       }).start()
-      onValueChanged(null)
+      onValueChangeIfNeeded(null)
     }
   }
 

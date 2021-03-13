@@ -1,9 +1,7 @@
-import useThrottle from "@rooks/use-throttle"
 import { useEffect, useState } from "react"
-import { pow } from "react-native-reanimated"
 import { Socket } from "socket.io-client"
 import { clamp } from "./Clamp"
-import { Joystick, JoystickState } from "./Joystick"
+import { JoystickState } from "./Joystick"
 
 export type CameraCalibration = Record<
   "h" | "v" | "h_min" | "h_middle" | "h_max" | "v_min" | "v_max",
@@ -38,23 +36,23 @@ export const useCameraHook = (socket: Socket) => {
     }
   }, [cameraAngle])
 
-  const [triggerThorrtledUpdate] = useThrottle(() => {
-    if (panning !== null && cameraAngle !== null && calibration !== null) {
-      const diff = coordinatedFromState(panning)
-      const m = 10
-      const { round } = Math
-      const { h_min, h_max, v_min, v_max } = calibration
-      setCameraAngle((c) => ({
-        h: round(clamp(h_min, c!.h - diff.h * m, h_max)),
-        v: round(clamp(v_min, c!.v + diff.v * m, v_max)),
-      }))
-    }
-  }, 10)
-
   return {
     setCameraPanning: (panning: JoystickState) => {
-      setPanning(panning)
-      triggerThorrtledUpdate()
+      if (panning !== null && cameraAngle !== null && calibration !== null) {
+        const diff = coordinatedFromState(panning)
+        const m = 10
+        const { round } = Math
+        const { h_min, h_max, v_min, v_max } = calibration
+        const precission = 10
+        setCameraAngle((c) => ({
+          h:
+            round(clamp(h_min, c!.h - diff.h * m, h_max) / precission) *
+            precission,
+          v:
+            round(clamp(v_min, c!.v + diff.v * m, v_max) / precission) *
+            precission,
+        }))
+      }
     },
     setCameraCalibration,
   }
