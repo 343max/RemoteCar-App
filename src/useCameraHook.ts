@@ -77,5 +77,10 @@ export const useCameraHook = (socket: Socket) => {
   return {
     setCameraPanning: setPanning,
     setCameraCalibration,
+    resetCameraPanning: () => {
+      if (calibration !== null) {
+        setCameraAngle({ h: calibration.h_middle, v: calibration.v_middle })
+      }
+    },
   }
 }

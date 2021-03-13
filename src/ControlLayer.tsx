@@ -8,6 +8,7 @@ import { DirectionalJoystick } from "./DirectionalJoystick"
 import { useSocket } from "./useSocket"
 import { CameraCalibration, useCameraHook } from "./useCameraHook"
 import { useSteeringHook } from "./useSteeringHook"
+import { RoundButton } from "./RoundButton"
 
 type ControlLayerProps = {
   style?: ViewStyle
@@ -22,7 +23,11 @@ export const ControlLayer: FC<ControlLayerProps> = ({ style }) => {
 
   const { socket, socketCreated } = useSocket(8080)
 
-  const { setCameraPanning, setCameraCalibration } = useCameraHook(socket)
+  const {
+    setCameraPanning,
+    setCameraCalibration,
+    resetCameraPanning,
+  } = useCameraHook(socket)
   const { setSteering, setSpeed } = useSteeringHook(socket)
 
   if (socketCreated) {
@@ -58,6 +63,18 @@ export const ControlLayer: FC<ControlLayerProps> = ({ style }) => {
       >
         <AntDesign name="videocamera" size={32} color="white" />
       </Joystick>
+      <RoundButton
+        radius={24}
+        style={{ position: "absolute", top: 40, left: 180 }}
+        enabled={connected}
+        onPress={resetCameraPanning}
+      >
+        <MaterialCommunityIcons
+          name="format-horizontal-align-center"
+          size={24}
+          color="white"
+        />
+      </RoundButton>
       <DirectionalJoystick
         direction="horizontal"
         onValueChanged={(n) => setSteering(n ?? 0)}
