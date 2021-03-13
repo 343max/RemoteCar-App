@@ -1,4 +1,4 @@
-import React, { FC } from "react"
+import React, { FC, useState } from "react"
 import { View, ViewStyle } from "react-native"
 import { Joystick } from "./Joystick"
 import { AntDesign } from "@expo/vector-icons"
@@ -18,6 +18,8 @@ type CalibrationType = {
 }
 
 export const ControlLayer: FC<ControlLayerProps> = ({ style }) => {
+  const [connected, setConnected] = useState(false)
+
   const { socket, socketCreated } = useSocket(8080)
 
   const { setCameraPanning, setCameraCalibration } = useCameraHook(socket)
@@ -26,16 +28,18 @@ export const ControlLayer: FC<ControlLayerProps> = ({ style }) => {
   if (socketCreated) {
     socket.on("connect", () => {
       console.log("connected control!")
+      setConnected(true)
     })
 
     socket.on("calibrate", (data: CalibrationType) => {
       setCameraCalibration(data.camera)
-      console.log({ calibration: data })
+      console.log("calibrated")
     })
 
     socket.on("disconnect", () => {
       console.log("disconnected control!")
       setCameraCalibration(null)
+      setConnected(false)
     })
   }
 
@@ -50,6 +54,7 @@ export const ControlLayer: FC<ControlLayerProps> = ({ style }) => {
         }}
         joystickRadius={40}
         trackingRadius={60}
+        enabled={connected}
       >
         <AntDesign name="videocamera" size={32} color="white" />
       </Joystick>
@@ -58,6 +63,7 @@ export const ControlLayer: FC<ControlLayerProps> = ({ style }) => {
         onValueChanged={(n) => setSteering(n ?? 0)}
         joystickRadius={40}
         trackingLength={180}
+        enabled={connected}
         style={{
           position: "absolute",
           left: 120,
@@ -71,6 +77,7 @@ export const ControlLayer: FC<ControlLayerProps> = ({ style }) => {
         onValueChanged={(n) => setSpeed(n ?? 0)}
         joystickRadius={40}
         trackingLength={50}
+        enabled={connected}
         style={{
           position: "absolute",
           right: 240,

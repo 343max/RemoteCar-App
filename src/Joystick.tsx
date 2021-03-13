@@ -1,18 +1,13 @@
-import React, { FC, useEffect, useRef, useState } from "react"
+import React, { FC, useRef, useState } from "react"
 import { Animated, Easing, StyleProp, View, ViewStyle } from "react-native"
 import {
   PanGestureHandler,
   PanGestureHandlerProperties,
   State,
 } from "react-native-gesture-handler"
-
-const circleStyle = (
-  radius: number
-): Pick<ViewStyle, "width" | "height" | "borderRadius"> => ({
-  width: radius * 2,
-  height: radius * 2,
-  borderRadius: radius,
-})
+import { ThumbStick } from "./ThumbStick"
+import { circleStyle, trackingStyle } from "./styleHelpers"
+import { useAnimatedValue } from "./useAnimatedValue"
 
 export type JoystickState = null | { rad: number; power: number }
 
@@ -21,6 +16,7 @@ type JoystickViewProps = {
   onValueChanged: (value: JoystickState) => void
   joystickRadius: number
   trackingRadius: number
+  enabled?: boolean
 }
 
 export const Joystick: FC<JoystickViewProps> = ({
@@ -28,25 +24,13 @@ export const Joystick: FC<JoystickViewProps> = ({
   onValueChanged,
   joystickRadius,
   trackingRadius,
+  enabled = true,
   children,
 }) => {
-  const translateX = useRef(new Animated.Value(0)).current
-  const translateY = useRef(new Animated.Value(0)).current
-  const opacity = useRef(new Animated.Value(1)).current
+  const translateX = useAnimatedValue(0)
+  const translateY = useAnimatedValue(0)
 
   const [panning, setPanning] = useState(false)
-
-  useEffect(() => {
-    if (panning) {
-      opacity.setValue(0.8)
-    } else {
-      Animated.timing(opacity, {
-        duration: 200,
-        toValue: 0.3,
-        useNativeDriver: true,
-      }).start()
-    }
-  }, [panning])
 
   const [offset, setOffset] = useState({ x: 0, y: 0 })
 
@@ -103,24 +87,18 @@ export const Joystick: FC<JoystickViewProps> = ({
             flex: 1,
             justifyContent: "center",
             alignItems: "center",
-            backgroundColor: "rgba(0,0,0,0.2)",
-            borderColor: "rgba(255,255,255,0.3)",
-            borderWidth: 1,
+            ...trackingStyle(enabled),
           },
         ]}
       >
-        <Animated.View
-          style={{
-            ...circleStyle(joystickRadius),
-            backgroundColor: "#ff8800",
-            opacity,
-            transform: [{ translateX }, { translateY }],
-            justifyContent: "center",
-            alignItems: "center",
-          }}
+        <ThumbStick
+          radius={joystickRadius}
+          transform={[{ translateX }, { translateY }]}
+          pressed={panning}
+          enabled={enabled}
         >
           {children}
-        </Animated.View>
+        </ThumbStick>
       </View>
     </PanGestureHandler>
   )

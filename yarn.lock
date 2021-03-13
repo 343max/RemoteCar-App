@@ -1971,6 +1971,16 @@
     sudo-prompt "^9.0.0"
     wcwidth "^1.0.1"
 
+"@rooks/use-interval@^4.9.2":
+  version "4.9.2"
+  resolved "https://registry.yarnpkg.com/@rooks/use-interval/-/use-interval-4.9.2.tgz#7444409875c51d44882b5ba73857ad64da2aea6c"
+  integrity sha512-JJ/GWpaI8HMBXxbNkm/8GobVdt3fPejuUHJTTZpipiQnbKqUwc1usmCEq4Yb6+fWXeRRjKH35pwhJ8Lit7RoGw==
+
+"@rooks/use-previous@^4.9.2":
+  version "4.9.2"
+  resolved "https://registry.yarnpkg.com/@rooks/use-previous/-/use-previous-4.9.2.tgz#81a2e881ec3a161a3cd7b78fb1d420ccf395cc75"
+  integrity sha512-+aQE2JrJ34+lgukXKh2wc8u1DLLV2uRqjnzd8n/S3HJI+wbIQXim1P8Tnhh80DOcutjYY0PV5WrNgkLuATrBYg==
+
 "@sinonjs/commons@^1.7.0":
   version "1.8.2"
   resolved "https://registry.yarnpkg.com/@sinonjs/commons/-/commons-1.8.2.tgz#858f5c4b48d80778fde4b9d541f27edc0d56488b"

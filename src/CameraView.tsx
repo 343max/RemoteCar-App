@@ -8,6 +8,7 @@ type CameraViewProps = {
 
 export const CameraView: FC<CameraViewProps> = ({ style }) => {
   const [imageData, setImageData] = useState<string | undefined>()
+  const [connected, setConnected] = useState(false)
 
   const { socket, socketCreated } = useSocket(12000)
 
@@ -15,9 +16,18 @@ export const CameraView: FC<CameraViewProps> = ({ style }) => {
     socket.on("image", (data) => {
       setImageData(data)
     })
+
+    socket.on("connect", () => {
+      setConnected(true)
+    })
+
+    socket.on("disconnect", () => {
+      console.log("disconnected control!")
+      setConnected(false)
+    })
   }
 
-  if (imageData === undefined) {
+  if (imageData === undefined || connected === false) {
     return <></>
   } else {
     return (

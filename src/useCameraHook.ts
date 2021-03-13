@@ -1,16 +1,18 @@
+import useInterval from "@rooks/use-interval"
+import usePrevious from "@rooks/use-previous"
 import { useEffect, useState } from "react"
 import { Socket } from "socket.io-client"
 import { clamp } from "./Clamp"
 import { JoystickState } from "./Joystick"
 
 export type CameraCalibration = Record<
-  "h" | "v" | "h_min" | "h_middle" | "h_max" | "v_min" | "v_max",
+  "h" | "v" | "h_min" | "h_middle" | "h_max" | "v_min" | "v_max" | "v_middle",
   number
 >
 
 type CameraAngle = Record<"h" | "v", number>
 
-const coordinatedFromState = ({
+const coordinatesFromState = ({
   rad,
   power,
 }: Exclude<JoystickState, null>): CameraAngle => ({
@@ -21,6 +23,7 @@ const coordinatedFromState = ({
 export const useCameraHook = (socket: Socket) => {
   const [cameraAngle, setCameraAngle] = useState<CameraAngle | null>(null)
   const [panning, setPanning] = useState<JoystickState>(null)
+  const previousPanning = usePrevious(panning)
   const [
     calibration,
     setCameraCalibration,
@@ -36,24 +39,43 @@ export const useCameraHook = (socket: Socket) => {
     }
   }, [cameraAngle])
 
+  const sendCameraPosition = () => {
+    if (panning !== null && cameraAngle !== null && calibration !== null) {
+      const diff = coordinatesFromState(panning)
+      const m = 10
+      const { round } = Math
+      const { h_min, h_max, v_min, v_max } = calibration
+      const precission = 1
+      setCameraAngle((c) => ({
+        h:
+          round(clamp(h_min, c!.h - diff.h * m, h_max) / precission) *
+          precission,
+        v:
+          round(clamp(v_min, c!.v + diff.v * m, v_max) / precission) *
+          precission,
+      }))
+    }
+  }
+
+  const [startInterval, clearInterval] = useInterval(() => {
+    sendCameraPosition()
+  }, 10)
+
+  useEffect(() => {
+    if (panning !== null && previousPanning === null) {
+      // joystick pressed
+      console.log("joystick down")
+      startInterval()
+    } else if (panning === null && previousPanning !== null) {
+      // joystick released
+      console.log("joystick up")
+      clearInterval()
+      sendCameraPosition
+    }
+  }, [panning])
+
   return {
-    setCameraPanning: (panning: JoystickState) => {
-      if (panning !== null && cameraAngle !== null && calibration !== null) {
-        const diff = coordinatedFromState(panning)
-        const m = 10
-        const { round } = Math
-        const { h_min, h_max, v_min, v_max } = calibration
-        const precission = 10
-        setCameraAngle((c) => ({
-          h:
-            round(clamp(h_min, c!.h - diff.h * m, h_max) / precission) *
-            precission,
-          v:
-            round(clamp(v_min, c!.v + diff.v * m, v_max) / precission) *
-            precission,
-        }))
-      }
-    },
+    setCameraPanning: setPanning,
     setCameraCalibration,
   }
 }
