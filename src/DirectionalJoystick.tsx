@@ -5,6 +5,7 @@ import {
   PanGestureHandlerProperties,
   State,
 } from "react-native-gesture-handler"
+import { clamp } from "./Clamp"
 
 const circleStyle = (
   radius: number
@@ -23,9 +24,6 @@ type JoystickViewProps = {
   joystickRadius: number
   trackingLength: number
 }
-
-const clamp = (min: number, value: number, max: number) =>
-  Math.min(Math.max(value, min), max)
 
 export const DirectionalJoystick: FC<JoystickViewProps> = ({
   direction,

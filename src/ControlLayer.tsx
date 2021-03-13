@@ -10,6 +10,7 @@ import {
 } from "./DirectionalJoystick"
 import useInterval from "@rooks/use-interval"
 import { useSocket } from "./useSocket"
+import { CameraCalibration, useCameraHook } from "./useCameraHook"
 
 type ControlLayerProps = {
   style?: ViewStyle
@@ -20,7 +21,7 @@ const calculateMotorSpeed = (
   speed: number
 ): [left: number, right: number] => {
   if (speed === 0) {
-    return [steering, -steering]
+    return [-steering, steering]
   } else if (speed > 0) {
     if (steering > 0) {
       return [speed - steering, speed]
@@ -36,8 +37,11 @@ const calculateMotorSpeed = (
   }
 }
 
+type CalibrationType = {
+  camera: CameraCalibration
+}
+
 export const ControlLayer: FC<ControlLayerProps> = ({ style }) => {
-  const [cameraPanning, setCameraPanning] = useState<JoystickState>(null)
   const [
     drivingDirection,
     setDrivingDirection,
@@ -56,17 +60,27 @@ export const ControlLayer: FC<ControlLayerProps> = ({ style }) => {
     sendDriveCommand(left, right)
   }, 10)
 
-  const socket = useSocket(8080, (socket) => {
+  const socket = useSocket(8080)
+
+  const { setCameraPanning, setCameraCalibration } = useCameraHook(socket)
+
+  useEffect(() => {
     socket.on("connect", () => {
       console.log("connected!")
       start()
     })
 
+    socket.on("calibrate", (data: CalibrationType) => {
+      setCameraCalibration(data.camera)
+      console.log({ calibration: data })
+    })
+
     socket.on("disconnect", () => {
       console.log("disconnected!")
+      setCameraCalibration(null)
       clear()
     })
-  })
+  }, [socket])
 
   return (
     <View style={style}>

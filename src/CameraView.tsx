@@ -1,4 +1,4 @@
-import React, { FC, useState } from "react"
+import React, { FC, useEffect, useState } from "react"
 import { Image, ImageStyle, StyleProp } from "react-native"
 import { useSocket } from "./useSocket"
 
@@ -9,11 +9,13 @@ type CameraViewProps = {
 export const CameraView: FC<CameraViewProps> = ({ style }) => {
   const [imageData, setImageData] = useState<string | undefined>()
 
-  useSocket(12000, (socket) => {
+  const socket = useSocket(12000)
+
+  useEffect(() => {
     socket.on("image", (data) => {
       setImageData(data)
     })
-  })
+  }, [socket])
 
   if (imageData === undefined) {
     return <></>
