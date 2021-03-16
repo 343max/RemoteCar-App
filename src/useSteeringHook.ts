@@ -27,8 +27,6 @@ export const useSteeringHook = (socket: Socket) => {
   const [steering, setSteering] = useState<number>(0)
 
   useEffect(() => {
-    console.log({ steering, speed })
-
     const [left, right] = calculateMotorSpeed(steering, speed)
     socket.emit("steer", { left, right })
   }, [speed, steering])

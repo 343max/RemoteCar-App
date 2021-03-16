@@ -64,11 +64,9 @@ export const useCameraHook = (socket: Socket) => {
   useEffect(() => {
     if (panning !== null && previousPanning === null) {
       // joystick pressed
-      console.log("joystick down")
       startInterval()
     } else if (panning === null && previousPanning !== null) {
       // joystick released
-      console.log("joystick up")
       clearInterval()
       sendCameraPosition
     }
